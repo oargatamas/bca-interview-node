@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import {Controller, Get, Param, Patch, Query} from '@nestjs/common';
 import { Book } from './books.entity';
 import { BooksService } from './books.service';
 
@@ -15,4 +15,15 @@ export class BooksController {
   findOne(@Param('id') id: string) {
     return this.booksService.findOne(+id);
   }
+
+  @Get('/query/:country')
+  findOneByAuthorCountry(@Param('country') country: string, @Query('from') fromYear: number){
+    return this.booksService.findAllByAuthorCountry(country, fromYear);
+  }
+
+  @Patch('/update-all-with-year')
+  async updateAllWithYear(){
+    return this.booksService.updateAllWithYear();
+  }
+
 }
