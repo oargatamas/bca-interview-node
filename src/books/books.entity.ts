@@ -21,6 +21,9 @@ export class Book extends BaseEntity {
   @Column()
   workId: string;
 
+  @Column({nullable: true})
+  year: number;
+
   @ManyToMany(() => Author)
   @JoinTable({ name: 'author_book' })
   authors: Author[];
