@@ -1,4 +1,4 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
+import {Injectable, InternalServerErrorException, NotFoundException} from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Between, LessThanOrEqual, MoreThanOrEqual, Not, Repository} from 'typeorm';
 import {OpenLibraryClientService} from '../open-library/open-library-client.service';
@@ -30,15 +30,22 @@ export class BooksService {
         return book;
     }
 
-    async updateAllWithYear(): Promise<any> {
-        let books = await this.bookRepository.findBy({
-            year: Not(null),
-        });
+    async updateAllWithYear(): Promise<void> {
+        try{
+            let books = await this.bookRepository.findBy({
+                year: Not(null),
+            });
 
-        for (let book of books){
-          book.year = (<number> await this.openLibraryClientService.getBookDetails(book.workId));
+            for (let book of books) {
+                const openLibResponse = await this.openLibraryClientService.getBookDetails(book.workId);
+                book.year = openLibResponse.publishedAt.getFullYear();
+            }
+
+            await this.bookRepository.save(books);
+        }catch(error){
+            console.error("BooksService - failed to update publish year of books: ", error);
+            throw new InternalServerErrorException(error);
         }
 
-        await this.bookRepository.save(books);
     }
 }
