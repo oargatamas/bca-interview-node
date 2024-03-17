@@ -12,13 +12,14 @@ export class OpenLibraryClientService {
       const apiResponse = await lastValueFrom(this.httpService.get(`https://openlibrary.org/works/${workId}.json`));
       const data = apiResponse.data;
 
-      if(!data.first_publish_date){
-        throw new InternalServerErrorException("first_publish_date not existing in openlibrary.org response!");
-      }
-
       const response = new OpenLibraryWorkIdResponse();
       response.workId = workId;
-      response.publishedAt = new Date(data.first_publish_date);
+
+      if(data.first_publish_date){
+        response.publishedAt = new Date(data.first_publish_date);
+      }else{
+        console.log("first_publish_date not existing in openlibrary.org response!");
+      }
 
       return response;
     }catch (error){
