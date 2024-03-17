@@ -1,6 +1,6 @@
 import {Injectable, InternalServerErrorException, NotFoundException} from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
-import {IsNull, Repository} from 'typeorm';
+import {IsNull, MoreThanOrEqual, Not, Repository} from 'typeorm';
 import {OpenLibraryClientService} from '../open-library/open-library-client.service';
 import {Book} from './books.entity';
 
@@ -30,8 +30,25 @@ export class BooksService {
         return book;
     }
 
+    async findAllByAuthorCountry(country: string, fromYear?: number): Promise<Book[]> {
+        const query = this.bookRepository.createQueryBuilder("book")
+            .innerJoin("book.authors", "author")
+            .where("author.country = :country", {country: country})
+
+        if (fromYear) {
+            query.andWhere([
+                {year: MoreThanOrEqual(fromYear)},
+                {year: Not(IsNull())}
+            ]);
+        }
+
+        console.log(query.getSql());
+
+        return query.getMany();
+    }
+
     async updateAllWithYear(): Promise<void> {
-        try{
+        try {
             let books = await this.bookRepository.findBy({
                 year: IsNull(),
             });
@@ -43,10 +60,11 @@ export class BooksService {
             }
 
             await this.bookRepository.save(books);
-        }catch(error){
+        } catch (error) {
             console.error("BooksService - failed to update publish year of books: ", error);
             throw new InternalServerErrorException(error);
         }
-
     }
+
+
 }
